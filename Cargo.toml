@@ -1,0 +1,16 @@
+[package]
+name = "macos-theme-sync"
+version = "0.1.0"
+edition = "2024"
+description = "Run a command on macOS appearance changes and wake, with failure-only retries"
+
+[[bin]]
+name = "theme-listener"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
