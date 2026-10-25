@@ -2,6 +2,7 @@
 name = "macnotify"
 version = "0.1.0"
 edition = "2024"
+license = "AGPL-3.0-or-later"
 description = "Run a command on macOS appearance changes and wake, with failure-only retries"
 
 [[bin]]

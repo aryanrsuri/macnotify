@@ -1,0 +1,32 @@
+-----------
+ macnotify
+-----------
+
+Run a command when macOS appearance changes, after wake, and once at startup.
+No polling. Written in Rust, with no third-party crates.
+
+Requires macOS, Rust, and Xcode Command Line Tools.
+
+```sh
+cargo install --path . --root ~/.local
+macnotify /path/to/command arg1 arg2
+macnotify /bin/bash /path/to/script.sh
+```
+
+Commands run one at a time. Failed commands retry with backoff, from 5 seconds
+up to 5 minutes. Commands should read the current state and return when done.
+Arguments are passed unchanged; no event name or appearance value is added.
+
+To run at login, copy `examples/macnotify.plist` to
+`~/Library/LaunchAgents/local.macnotify.plist`. Set the absolute paths to
+macnotify and your command, then load it:
+
+```sh
+launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/local.macnotify.plist
+```
+
+Stop it with `launchctl bootout "gui/$(id -u)/local.macnotify"`.
+
+SSH/tmux/Neovim example: `examples/ssh-theme/README`.
+
+AGPL-3.0-or-later. See LICENCE.

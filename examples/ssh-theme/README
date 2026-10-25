@@ -1,0 +1,46 @@
+-----------
+ ssh-theme
+-----------
+
+Sync macOS appearance to tmux and Neovim on a Linux SSH server.
+
+The Mac needs a ~/.local/bin/term-theme command that applies its local theme,
+and passwordless SSH access to the server. The server needs tmux, nvim, and
+GNU timeout. Supply these palettes yourself:
+
+    ~/.config/terminal-style/light/theme.tmux
+    ~/.config/terminal-style/dark/theme.tmux
+    ~/.config/nvim/colors/reference.lua
+
+The Neovim colorscheme must support both backgrounds. Change "reference" in
+nvim/lua/terminal_theme.lua if yours has another name.
+
+On the server, from the repo root:
+
+```sh
+mkdir -p "$HOME/.local/bin" "$HOME/.config/nvim/lua"
+install -m 755 examples/ssh-theme/remote-term-theme.sh "$HOME/.local/bin/term-theme"
+install -m 644 examples/ssh-theme/nvim/lua/terminal_theme.lua "$HOME/.config/nvim/lua/terminal_theme.lua"
+install -m 755 examples/ssh-theme/nvim/refresh-theme.sh "$HOME/.config/nvim/refresh-theme.sh"
+```
+
+Add to ~/.config/nvim/init.lua, replacing the old theme callback:
+
+```lua
+require("terminal_theme").setup()
+```
+
+Restart existing editors after installing. The refresh script uses
+Neovim's default sockets under $XDG_RUNTIME_DIR (or /run/user/$(id -u)); adjust
+it if you use custom --listen paths.
+
+On the Mac, from the repo root:
+
+```sh
+mkdir -p "$HOME/.local/bin"
+install -m 755 examples/ssh-theme/sync-theme.sh "$HOME/.local/bin/sync-theme"
+THEME_SSH_HOST=your-server macnotify "$HOME/.local/bin/sync-theme"
+```
+
+For login startup, use ../macnotify.plist with sync-theme as the command and
+THEME_SSH_HOST in EnvironmentVariables. See ../../README for loading the agent.
