@@ -1,11 +1,11 @@
 [package]
-name = "pubrat"
+name = "macnotify"
 version = "0.1.0"
 edition = "2024"
 description = "Run a command on macOS appearance changes and wake, with failure-only retries"
 
 [[bin]]
-name = "theme-listener"
+name = "macnotify"
 path = "src/main.rs"
 
 [profile.release]

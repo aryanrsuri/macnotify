@@ -3,10 +3,10 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>local.pubrat</string>
+    <string>local.macnotify</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/YOUR_USER/.local/bin/theme-listener</string>
+        <string>/Users/YOUR_USER/.local/bin/macnotify</string>
         <string>/absolute/path/to/your-command</string>
     </array>
     <key>RunAtLoad</key>
@@ -19,8 +19,8 @@
         <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     </dict>
     <key>StandardOutPath</key>
-    <string>/Users/YOUR_USER/Library/Logs/pubrat.log</string>
+    <string>/Users/YOUR_USER/Library/Logs/macnotify.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/YOUR_USER/Library/Logs/pubrat-error.log</string>
+    <string>/Users/YOUR_USER/Library/Logs/macnotify-error.log</string>
 </dict>
 </plist>

@@ -31,12 +31,12 @@ fn main() {
         .is_some_and(|arg| arg == "--help" || arg == "-h")
     {
         println!(
-            "Usage: theme-listener COMMAND [ARG ...]\nRun on startup, macOS appearance changes, and wake. Retry failures with backoff."
+            "Usage: macnotify COMMAND [ARG ...]\nRun on startup, macOS appearance changes, and wake. Retry failures with backoff."
         );
         return;
     }
     if args.is_empty() {
-        eprintln!("Usage: theme-listener COMMAND [ARG ...]");
+        eprintln!("Usage: macnotify COMMAND [ARG ...]");
         std::process::exit(2);
     }
     let (sender, receiver) = mpsc::sync_channel(1);
@@ -60,6 +60,6 @@ fn main() {
 
 #[cfg(not(target_os = "macos"))]
 fn main() {
-    eprintln!("theme-listener requires macOS");
+    eprintln!("macnotify requires macOS");
     std::process::exit(1);
 }

@@ -1,4 +1,4 @@
--- Theme-specific Neovim integration; independent of the Pubrat listener.
+-- Theme-specific Neovim integration; independent of the Macnotify listener.
 local M = {}
 
 function M.apply()

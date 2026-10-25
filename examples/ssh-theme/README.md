@@ -1,9 +1,9 @@
 # SSH, tmux, and Neovim theme integration
 
-This optional example follows macOS appearance on a Linux SSH server. It is separate from Pubrat's native notification and command-running code.
+This optional example follows macOS appearance on a Linux SSH server. It is separate from Macnotify's native notification and command-running code.
 
 ```text
-Pubrat (Mac events)
+Macnotify (Mac events)
   → sync-theme.sh (local update + SSH)
     → remote term-theme (saved mode + tmux)
       → ~/.config/nvim/refresh-theme.sh (RPC to running Neovim)
@@ -84,7 +84,7 @@ THEME_SSH_HOST=your-server "$HOME/.local/bin/sync-theme"
 Use the generic [`../LaunchAgent.plist`](../LaunchAgent.plist), with these two `ProgramArguments` values after replacing the username:
 
 ```xml
-<string>/Users/YOUR_USER/.local/bin/theme-listener</string>
+<string>/Users/YOUR_USER/.local/bin/macnotify</string>
 <string>/Users/YOUR_USER/.local/bin/sync-theme</string>
 ```
 
@@ -101,4 +101,4 @@ Follow the [root README's startup instructions](../../README.md#start-at-login) 
 
 Switch actual macOS appearance to dark, then light. For each transition, verify the server's `~/.config/terminal-style/current`, tmux colors, and `:set background?` inside each running Neovim instance. Do not rely only on a synthetic notification test.
 
-A failed command causes Pubrat to retry with backoff; successful commands leave it idle. Codex can retain cached terminal colors in an existing session. This integration never restarts Codex; refresh or restart that application manually when needed.
+A failed command causes Macnotify to retry with backoff; successful commands leave it idle. Codex can retain cached terminal colors in an existing session. This integration never restarts Codex; refresh or restart that application manually when needed.

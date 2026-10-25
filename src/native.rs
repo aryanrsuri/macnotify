@@ -33,12 +33,12 @@ extern "C" fn appearance_changed(
     _: Object,
     _: Object,
 ) {
-    eprintln!("pubrat: appearance changed");
+    eprintln!("macnotify: appearance changed");
     crate::notify();
 }
 
 extern "C" fn woke(_: Object, _: Selector, _: Object) {
-    eprintln!("pubrat: woke from sleep");
+    eprintln!("macnotify: woke from sleep");
     crate::notify();
 }
 
@@ -78,7 +78,7 @@ pub fn run() -> ! {
 
         let class = objc_allocateClassPair(
             objc_getClass(c"NSObject".as_ptr()),
-            c"PubratObserver".as_ptr(),
+            c"MacnotifyObserver".as_ptr(),
             0,
         );
         assert!(!class.is_null(), "cannot allocate event observer");
@@ -135,7 +135,7 @@ pub fn run() -> ! {
             std::mem::transmute(objc_msgSend as unsafe extern "C" fn());
         send_void(pool, sel_registerName(c"drain".as_ptr()));
 
-        eprintln!("pubrat: listener started");
+        eprintln!("macnotify: listener started");
         crate::notify();
         // AppKit processes system appearance changes and drains per-event autorelease pools.
         send_void(app, sel_registerName(c"run".as_ptr()));
