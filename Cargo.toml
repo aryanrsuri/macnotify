@@ -1,5 +1,5 @@
 [package]
-name = "macos-theme-sync"
+name = "pubrat"
 version = "0.1.0"
 edition = "2024"
 description = "Run a command on macOS appearance changes and wake, with failure-only retries"

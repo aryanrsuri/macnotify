@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "macos-theme-sync"
+name = "pubrat"
 version = "0.1.0"

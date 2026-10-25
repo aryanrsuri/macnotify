@@ -1,4 +1,4 @@
-# macos-theme-sync
+# pubrat
 
 Run a command when macOS appearance changes, at startup, and after wake. Written in Rust with no third-party crates; it links directly to macOS frameworks.
 
@@ -42,20 +42,20 @@ THEME_SSH_HOST=your-server ./target/release/theme-listener /bin/sh "$PWD/example
    install -m 755 examples/sync-theme.sh "$HOME/.local/bin/sync-theme"
    ```
 
-2. Copy [`examples/LaunchAgent.plist`](examples/LaunchAgent.plist) to `~/Library/LaunchAgents/local.macos-theme-sync.plist`. Replace every `/Users/YOUR_USER` placeholder and set `THEME_SSH_HOST` to your SSH host alias. LaunchAgent arguments require absolute paths; `~` is not expanded.
+2. Copy [`examples/LaunchAgent.plist`](examples/LaunchAgent.plist) to `~/Library/LaunchAgents/local.pubrat.plist`. Replace every `/Users/YOUR_USER` placeholder and set `THEME_SSH_HOST` to your SSH host alias. LaunchAgent arguments require absolute paths; `~` is not expanded.
 
 3. Load the agent:
 
    ```sh
-   plutil -lint "$HOME/Library/LaunchAgents/local.macos-theme-sync.plist"
-   launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/local.macos-theme-sync.plist"
-   launchctl print "gui/$(id -u)/local.macos-theme-sync"
+   plutil -lint "$HOME/Library/LaunchAgents/local.pubrat.plist"
+   launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/local.pubrat.plist"
+   launchctl print "gui/$(id -u)/local.pubrat"
    ```
 
 To stop it:
 
 ```sh
-launchctl bootout "gui/$(id -u)/local.macos-theme-sync"
+launchctl bootout "gui/$(id -u)/local.pubrat"
 ```
 
 Move the plist out of `~/Library/LaunchAgents` to prevent it loading at the next login. Disable any older polling job that performs the same updates.
