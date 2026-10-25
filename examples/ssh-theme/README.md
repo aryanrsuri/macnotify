@@ -54,7 +54,13 @@ Add this once to `~/.config/nvim/init.lua`, replacing any older duplicate theme-
 require("terminal_theme").setup()
 ```
 
-For existing editor instances, execute `:lua require("terminal_theme").setup()` once. Future instances load it from `init.lua`. Test the server command:
+For existing editor instances, load the new file once directly (plugin loaders may have cached the previously absent module):
+
+```vim
+:lua package.loaded.terminal_theme = dofile(vim.fn.stdpath("config") .. "/lua/terminal_theme.lua"); require("terminal_theme").setup()
+```
+
+Future instances load it from `init.lua`. Test the server command:
 
 ```sh
 ~/.local/bin/term-theme light
