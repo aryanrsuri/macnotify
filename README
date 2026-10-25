@@ -8,10 +8,12 @@ Run a command when macOS appearance changes, after wake, and once at startup.
 cargo install --path . --root ~/.local
 macnotify /path/to/command arg1 arg2
 macnotify /bin/bash /path/to/script.sh
+macnotify --retry 5,15 /path/to/command
 ```
 
-Commands run one at a time. Failed commands retry with backoff, from 5 seconds
-up to 5 minutes. Commands should read the current state and return when done.
+Commands run one at a time, with no retries by default. `--retry 5,15` retries
+twice: 5 seconds after failure, then 15 seconds after the next failure. A new
+event starts a fresh attempt. Commands should read the current state and return.
 Arguments are passed unchanged; no event name or appearance value is added.
 
 To run at login, copy `examples/macnotify.plist` to

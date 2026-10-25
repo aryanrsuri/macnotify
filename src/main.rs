@@ -1,3 +1,5 @@
+#[cfg(any(target_os = "macos", test))]
+mod cli;
 #[cfg(target_os = "macos")]
 mod native;
 #[cfg(any(target_os = "macos", test))]
@@ -30,29 +32,29 @@ fn main() {
         .first()
         .is_some_and(|arg| arg == "--help" || arg == "-h")
     {
-        println!(
-            "Usage: macnotify COMMAND [ARG ...]\nRun on startup, macOS appearance changes, and wake. Retry failures with backoff."
-        );
+        println!("{}", cli::USAGE);
         return;
     }
-    if args.is_empty() {
-        eprintln!("Usage: macnotify COMMAND [ARG ...]");
+    let options = cli::parse(args).unwrap_or_else(|error| {
+        eprintln!("{error}\n{}", cli::USAGE);
         std::process::exit(2);
-    }
+    });
     let (sender, receiver) = mpsc::sync_channel(1);
     EVENTS.set(sender).unwrap();
     std::thread::spawn(move || {
         worker::run(
             receiver,
-            || match Command::new(&args[0]).args(&args[1..]).status() {
+            || match Command::new(&options.command[0])
+                .args(&options.command[1..])
+                .status()
+            {
                 Ok(status) if status.success() => true,
                 result => {
-                    eprintln!("Theme command failed ({result:?}); scheduling retry.");
+                    eprintln!("Command failed ({result:?}).");
                     false
                 }
             },
-            std::time::Duration::from_secs(5),
-            std::time::Duration::from_secs(300),
+            &options.retries,
         );
     });
     native::run();

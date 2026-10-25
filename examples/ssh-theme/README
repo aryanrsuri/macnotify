@@ -39,8 +39,9 @@ On the Mac, from the repo root:
 ```sh
 mkdir -p "$HOME/.local/bin"
 install -m 755 examples/ssh-theme/sync-theme.sh "$HOME/.local/bin/sync-theme"
-THEME_SSH_HOST=your-server macnotify "$HOME/.local/bin/sync-theme"
+THEME_SSH_HOST=your-server macnotify --retry 5,15 "$HOME/.local/bin/sync-theme"
 ```
 
-For login startup, use ../macnotify.plist with sync-theme as the command and
-THEME_SSH_HOST in EnvironmentVariables. See ../../README for loading the agent.
+For login startup, use ../macnotify.plist with `--retry`, `5,15`, and the
+sync-theme path after macnotify in ProgramArguments. Put THEME_SSH_HOST in
+EnvironmentVariables. See ../../README for loading the agent.
