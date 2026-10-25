@@ -1,4 +1,4 @@
-//! Native notifications only; the main thread sleeps inside the macOS run loop.
+//! macOS owns event delivery; this module never polls preferences.
 use std::ffi::{CStr, c_char, c_void};
 use std::ptr::null_mut;
 
@@ -25,32 +25,24 @@ unsafe extern "C" {
     static NSWorkspaceDidWakeNotification: Object;
 }
 
-#[link(name = "CoreFoundation", kind = "framework")]
-unsafe extern "C" {
-    fn CFNotificationCenterGetDistributedCenter() -> Object;
-    fn CFNotificationCenterAddObserver(
-        center: Object,
-        observer: Object,
-        callback: extern "C" fn(Object, Object, Object, Object, Object),
-        name: Object,
-        object: Object,
-        suspension_behavior: isize,
-    );
-    fn CFStringCreateWithCString(allocator: Object, text: *const c_char, encoding: u32) -> Object;
-    fn CFRelease(object: Object);
-    static kCFRunLoopDefaultMode: Object;
-    fn CFRunLoopRunInMode(mode: Object, seconds: f64, return_after_source: u8) -> i32;
-}
-
-extern "C" fn appearance_changed(_: Object, _: Object, _: Object, _: Object, _: Object) {
+extern "C" fn appearance_changed(
+    _: Object,
+    _: Selector,
+    _: Object,
+    _: Object,
+    _: Object,
+    _: Object,
+) {
+    eprintln!("pubrat: appearance changed");
     crate::notify();
 }
 
 extern "C" fn woke(_: Object, _: Selector, _: Object) {
+    eprintln!("pubrat: woke from sleep");
     crate::notify();
 }
 
-// This helper is only used for zero-argument Objective-C methods returning objects.
+// Only zero-argument Objective-C methods returning objects belong in this helper.
 unsafe fn send_object(receiver: Object, name: &CStr) -> Object {
     unsafe {
         let send: unsafe extern "C" fn(Object, Selector) -> Object =
@@ -62,65 +54,91 @@ unsafe fn send_object(receiver: Object, name: &CStr) -> Object {
 pub fn run() -> ! {
     unsafe {
         let pool = send_object(objc_getClass(c"NSAutoreleasePool".as_ptr()), c"new");
-        let name = CFStringCreateWithCString(
-            null_mut(),
-            c"AppleInterfaceThemeChangedNotification".as_ptr(),
-            0x08000100,
+        let app = send_object(
+            objc_getClass(c"NSApplication".as_ptr()),
+            c"sharedApplication",
         );
-        assert!(!name.is_null());
-        CFNotificationCenterAddObserver(
-            CFNotificationCenterGetDistributedCenter(),
-            null_mut(),
-            appearance_changed,
-            name,
-            null_mut(),
-            4, // DeliverImmediately, including while inactive.
+        assert!(!app.is_null(), "cannot initialize NSApplication");
+        let set_policy: unsafe extern "C" fn(Object, Selector, isize) -> bool =
+            std::mem::transmute(objc_msgSend as unsafe extern "C" fn());
+        set_policy(
+            app,
+            sel_registerName(c"setActivationPolicy:".as_ptr()),
+            2, // Prohibited: no Dock icon, menus, windows, or activation.
         );
-        CFRelease(name);
+        // A background process may already be prohibited; verify the state,
+        // rather than requiring the setter to report a transition.
+        let get_policy: unsafe extern "C" fn(Object, Selector) -> isize =
+            std::mem::transmute(objc_msgSend as unsafe extern "C" fn());
+        assert_eq!(
+            get_policy(app, sel_registerName(c"activationPolicy".as_ptr())),
+            2,
+            "cannot keep listener in the background",
+        );
 
         let class = objc_allocateClassPair(
             objc_getClass(c"NSObject".as_ptr()),
-            c"TermThemeWakeObserver".as_ptr(),
+            c"PubratObserver".as_ptr(),
             0,
         );
-        assert!(!class.is_null(), "cannot allocate wake observer");
-        let selector = sel_registerName(c"woke:".as_ptr());
+        assert!(!class.is_null(), "cannot allocate event observer");
         assert!(class_addMethod(
             class,
-            selector,
+            sel_registerName(c"observeValueForKeyPath:ofObject:change:context:".as_ptr()),
+            appearance_changed as *const c_void,
+            c"v@:@@@^v".as_ptr(),
+        ));
+        let wake_selector = sel_registerName(c"woke:".as_ptr());
+        assert!(class_addMethod(
+            class,
+            wake_selector,
             woke as *const c_void,
-            c"v@:@".as_ptr()
+            c"v@:@".as_ptr(),
         ));
         objc_registerClassPair(class);
-        // Retain the observer for the process lifetime.
+        // Keep the observer and key path alive for the process lifetime.
         let observer = send_object(class, c"new");
+        let key = send_object(objc_getClass(c"NSString".as_ptr()), c"alloc");
+        let init_string: unsafe extern "C" fn(Object, Selector, *const c_char) -> Object =
+            std::mem::transmute(objc_msgSend as unsafe extern "C" fn());
+        let key = init_string(
+            key,
+            sel_registerName(c"initWithUTF8String:".as_ptr()),
+            c"effectiveAppearance".as_ptr(),
+        );
+        assert!(!observer.is_null() && !key.is_null());
+        let observe: unsafe extern "C" fn(Object, Selector, Object, Object, usize, Object) =
+            std::mem::transmute(objc_msgSend as unsafe extern "C" fn());
+        observe(
+            app,
+            sel_registerName(c"addObserver:forKeyPath:options:context:".as_ptr()),
+            observer,
+            key,
+            0,
+            null_mut(),
+        );
+
         let workspace = send_object(objc_getClass(c"NSWorkspace".as_ptr()), c"sharedWorkspace");
         let center = send_object(workspace, c"notificationCenter");
-        assert!(
-            !observer.is_null() && !center.is_null(),
-            "cannot register wake observer"
-        );
+        assert!(!center.is_null(), "cannot register wake observer");
         let add: unsafe extern "C" fn(Object, Selector, Object, Selector, Object, Object) =
             std::mem::transmute(objc_msgSend as unsafe extern "C" fn());
         add(
             center,
             sel_registerName(c"addObserver:selector:name:object:".as_ptr()),
             observer,
-            selector,
+            wake_selector,
             NSWorkspaceDidWakeNotification,
             null_mut(),
         );
-        let drain: unsafe extern "C" fn(Object, Selector) =
+        let send_void: unsafe extern "C" fn(Object, Selector) =
             std::mem::transmute(objc_msgSend as unsafe extern "C" fn());
-        drain(pool, sel_registerName(c"drain".as_ptr()));
+        send_void(pool, sel_registerName(c"drain".as_ptr()));
 
+        eprintln!("pubrat: listener started");
         crate::notify();
-        loop {
-            let pool = send_object(objc_getClass(c"NSAutoreleasePool".as_ptr()), c"new");
-            // No polling interval: sleep until a source fires, then release Cocoa temporaries.
-            let result = CFRunLoopRunInMode(kCFRunLoopDefaultMode, f64::MAX, 1);
-            drain(pool, sel_registerName(c"drain".as_ptr()));
-            assert!(result == 4, "macOS notification run loop stopped: {result}");
-        }
+        // AppKit processes system appearance changes and drains per-event autorelease pools.
+        send_void(app, sel_registerName(c"run".as_ptr()));
     }
+    panic!("macOS application event loop stopped");
 }

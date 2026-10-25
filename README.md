@@ -62,10 +62,14 @@ Move the plist out of `~/Library/LaunchAgents` to prevent it loading at the next
 
 ## Behavior and limits
 
-- Appearance changes use `AppleInterfaceThemeChangedNotification`, an undocumented macOS notification. Wake uses `NSWorkspaceDidWakeNotification`. Verify behavior after major macOS upgrades.
+- Appearance changes observe `NSApplication.effectiveAppearance`; AppKit delivers changes through its application event loop. Wake uses `NSWorkspaceDidWakeNotification`. Startup, appearance, and wake events are logged to stderr.
 - There is no network-reconnect listener. A pending failed SSH update retries automatically; a previously successful update waits for the next appearance, wake, or startup event.
 - Events arriving while a command runs queue one follow-up execution. A hung command blocks later commands, but not notification delivery.
 - This does not restart editors or other applications. Applications that cache colors at startup still need their normal manual refresh or restart.
 - `cargo test` runs the scheduling tests on macOS or Linux. The native listener only runs on macOS; Linux tests cannot validate macOS notifications.
 
 The repository does not yet specify a license. Choose one before distributing it for reuse.
+
+## Verify appearance delivery
+
+After installing the agent, switch the actual macOS appearance from light to dark and back. Check the event log and the command's resulting state after **both** transitions. Posting a synthetic notification only tests the injection path; it does not prove that macOS itself delivers appearance changes. The unit tests cover retries and idle scheduling, not the system appearance integration.
