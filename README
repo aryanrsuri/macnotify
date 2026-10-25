@@ -3,9 +3,6 @@
 -----------
 
 Run a command when macOS appearance changes, after wake, and once at startup.
-No polling. Written in Rust, with no third-party crates.
-
-Requires macOS, Rust, and Xcode Command Line Tools.
 
 ```sh
 cargo install --path . --root ~/.local
@@ -26,7 +23,3 @@ launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/local.macnotify.plist
 ```
 
 Stop it with `launchctl bootout "gui/$(id -u)/local.macnotify"`.
-
-SSH/tmux/Neovim example: `examples/ssh-theme/README`.
-
-AGPL-3.0-or-later. See LICENCE.
